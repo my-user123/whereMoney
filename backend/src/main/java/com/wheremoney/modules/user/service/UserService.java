@@ -52,10 +52,10 @@ public class UserService {
   public UserMeResponse toResponse(UserEntity user, UserProfileEntity profile) {
     return new UserMeResponse(
         String.valueOf(user.getId()),
+        user.getEmail(),
         user.getUsername(),
-        profile.getNickname(),
         profile.getAvatarUrl(),
-        profile.getDefaultCurrency(),
+        profile.getDefaultCurrency().code(),
         profile.getUserType(),
         profile.getTimezone());
   }

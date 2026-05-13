@@ -28,7 +28,6 @@ public class AccountService {
     LambdaQueryWrapper<AccountEntity> wrapper =
         new LambdaQueryWrapper<AccountEntity>()
             .eq(AccountEntity::getUserId, userId)
-            .isNull(AccountEntity::getDeletedAt)
             .orderByAsc(AccountEntity::getSortOrder)
             .orderByDesc(AccountEntity::getCreatedAt);
     if (status != null && !status.isBlank()) {
@@ -43,7 +42,7 @@ public class AccountService {
     entity.setUserId(userId);
     entity.setName(request.name());
     entity.setType(request.type().name());
-    entity.setCurrency(request.currency());
+    entity.setCurrency(request.currency().name());
     entity.setInitialBalance(request.initialBalance());
     entity.setCurrentBalance(request.initialBalance());
     entity.setColor(request.color());
@@ -62,7 +61,7 @@ public class AccountService {
     BigDecimal balanceDelta = entity.getCurrentBalance().subtract(entity.getInitialBalance());
     entity.setName(request.name());
     entity.setType(request.type().name());
-    entity.setCurrency(request.currency());
+    entity.setCurrency(request.currency().name());
     entity.setInitialBalance(request.initialBalance());
     entity.setCurrentBalance(request.initialBalance().add(balanceDelta));
     entity.setColor(request.color());
@@ -100,8 +99,7 @@ public class AccountService {
         accountMapper.selectOne(
             new LambdaQueryWrapper<AccountEntity>()
                 .eq(AccountEntity::getId, accountId)
-                .eq(AccountEntity::getUserId, userId)
-                .isNull(AccountEntity::getDeletedAt));
+                .eq(AccountEntity::getUserId, userId));
     if (entity == null) {
       throw new BusinessException(ResponseCode.ACCOUNT_UNAVAILABLE);
     }

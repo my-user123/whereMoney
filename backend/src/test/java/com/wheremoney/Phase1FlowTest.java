@@ -127,13 +127,7 @@ class Phase1FlowTest {
             .perform(
                 post("/api/v1/auth/register")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(
-                        json(
-                            Map.of(
-                                "email",
-                                email,
-                                "password",
-                                "secret123"))))
+                    .content(json(Map.of("email", email, "password", "secret123"))))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
             .andReturn();

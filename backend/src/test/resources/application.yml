@@ -11,6 +11,6 @@ spring:
 app:
   jwt:
     secret: where-money-test-secret-at-least-32-characters
-    expiration-minutes: 60
+    expiration-minutes: 7200
   cors:
     allowed-origins: http://localhost:3000

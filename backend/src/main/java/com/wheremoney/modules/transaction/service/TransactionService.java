@@ -71,7 +71,7 @@ public class TransactionService {
   @Transactional
   public TransactionResponse create(Long userId, TransactionRequest request) {
     AccountEntity account = accountService.requireActive(userId, request.accountId());
-    if (request.currency() != null && !request.currency().equals(account.getCurrency())) {
+    if (request.currency() != null && !request.currency().name().equals(account.getCurrency())) {
       throw new BusinessException(ResponseCode.TRANSACTION_CURRENCY_MISMATCH);
     }
     CategoryEntity category =
@@ -100,7 +100,7 @@ public class TransactionService {
     accountService.applyDelta(oldAccount, signedAmount(old.getType(), old.getAmount()).negate());
 
     AccountEntity newAccount = accountService.requireActive(userId, request.accountId());
-    if (request.currency() != null && !request.currency().equals(newAccount.getCurrency())) {
+    if (request.currency() != null && !request.currency().name().equals(newAccount.getCurrency())) {
       throw new BusinessException(ResponseCode.TRANSACTION_CURRENCY_MISMATCH);
     }
     CategoryEntity category =
@@ -123,9 +123,7 @@ public class TransactionService {
     TransactionEntity entity = requireOwned(userId, transactionId);
     AccountEntity account = accountService.requireActive(userId, entity.getAccountId());
     accountService.applyDelta(account, signedAmount(entity.getType(), entity.getAmount()).negate());
-    entity.setDeletedAt(LocalDateTime.now());
-    entity.setUpdatedAt(entity.getDeletedAt());
-    transactionMapper.updateById(entity);
+    transactionMapper.deleteById(entity);
   }
 
   private TransactionEntity requireOwned(Long userId, Long transactionId) {
@@ -133,8 +131,7 @@ public class TransactionService {
         transactionMapper.selectOne(
             new LambdaQueryWrapper<TransactionEntity>()
                 .eq(TransactionEntity::getId, transactionId)
-                .eq(TransactionEntity::getUserId, userId)
-                .isNull(TransactionEntity::getDeletedAt));
+                .eq(TransactionEntity::getUserId, userId));
     if (entity == null) {
       throw new BusinessException(ResponseCode.TRANSACTION_NOT_FOUND);
     }

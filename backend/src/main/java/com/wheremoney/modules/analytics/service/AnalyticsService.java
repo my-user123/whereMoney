@@ -44,8 +44,7 @@ public class AnalyticsService {
             new LambdaQueryWrapper<TransactionEntity>()
                 .eq(TransactionEntity::getUserId, userId)
                 .ge(TransactionEntity::getOccurredAt, startAt)
-                .lt(TransactionEntity::getOccurredAt, endAt)
-                .isNull(TransactionEntity::getDeletedAt));
+                .lt(TransactionEntity::getOccurredAt, endAt));
 
     Map<String, List<TransactionEntity>> byCurrency =
         transactions.stream()

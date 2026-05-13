@@ -40,7 +40,6 @@ public class CategoryService {
     LambdaQueryWrapper<CategoryEntity> wrapper =
         new LambdaQueryWrapper<CategoryEntity>()
             .eq(CategoryEntity::getUserId, userId)
-            .isNull(CategoryEntity::getDeletedAt)
             .orderByAsc(CategoryEntity::getType)
             .orderByAsc(CategoryEntity::getSortOrder)
             .orderByDesc(CategoryEntity::getCreatedAt);
@@ -104,8 +103,7 @@ public class CategoryService {
         categoryMapper.selectOne(
             new LambdaQueryWrapper<CategoryEntity>()
                 .eq(CategoryEntity::getId, categoryId)
-                .eq(CategoryEntity::getUserId, userId)
-                .isNull(CategoryEntity::getDeletedAt));
+                .eq(CategoryEntity::getUserId, userId));
     if (entity == null) {
       throw new BusinessException(ResponseCode.CATEGORY_UNAVAILABLE);
     }

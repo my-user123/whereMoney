@@ -1,5 +1,6 @@
 package com.wheremoney.modules.transaction.dto;
 
+import com.wheremoney.common.enums.CurrencyCode;
 import com.wheremoney.common.enums.TransactionType;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 public record TransactionRequest(
     @NotNull TransactionType type,
     @NotNull @DecimalMin("0.01") BigDecimal amount,
-    String currency,
+    CurrencyCode currency,
     @NotNull Long accountId,
     @NotNull Long categoryId,
     @NotNull LocalDateTime occurredAt,

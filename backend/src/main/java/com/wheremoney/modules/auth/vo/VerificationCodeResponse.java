@@ -1,3 +1,3 @@
 package com.wheremoney.modules.auth.vo;
 
-public record VerificationCodeResponse(int expiresInSeconds, String devCode) {}
+public record VerificationCodeResponse(int expiresInSeconds) {}
