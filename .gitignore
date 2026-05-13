@@ -1,0 +1,39 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+secrets/
+config/credentials*
+config/*.key
+config/*.pem
+
+# Codex local-only settings
+.codex/settings.local.json
+.codex/local/
+
+# Java build output
+target/
+build/
+out/
+*.class
+
+# Node/frontend output
+node_modules/
+dist/
+.next/
+.vite/
+coverage/
+
+# IDE and OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+logs/
+tmp/
+temp/
+*.tmp
