@@ -15,20 +15,168 @@ const features = [
 
 const tabs = ["首页", "账户", "预算", "记账", "报表", "目标"];
 
-const previewMeta: Record<string, { label: string; title: string; detail: string; accent: string }> = {
-  首页: { label: "总览", title: "今日财务概览", detail: "收入、支出、结余和目标进度集中呈现。", accent: "#d4a017" },
-  账户: { label: "账户", title: "账户余额追踪", detail: "现金、银行卡、微信、支付宝分账户查看。", accent: "#2563eb" },
-  预算: { label: "预算", title: "预算执行状态", detail: "提前发现接近预算线的消费分类。", accent: "#dc2626" },
-  记账: { label: "记账", title: "快速确认收支", detail: "手动或 AI 解析后确认每一笔收入支出。", accent: "#16a34a" },
-  报表: { label: "报表", title: "消费趋势分析", detail: "用月度趋势和分类占比理解消费结构。", accent: "#7c3aed" },
-  目标: { label: "目标", title: "储蓄目标进度", detail: "把半年存款、旅行基金等目标拆成进度。", accent: "#ea580c" }
+const previewMeta: Record<string, { label: string; title: string; detail: string; accent: string; delta: string }> = {
+  首页: { label: "总览", title: "今日财务概览", detail: "收入、支出、结余和目标进度集中呈现。", accent: "#d4a017", delta: "+6.72%" },
+  账户: { label: "账户", title: "账户余额追踪", detail: "现金、银行卡、微信、支付宝分账户查看。", accent: "#2563eb", delta: "+3.18%" },
+  预算: { label: "预算", title: "预算执行状态", detail: "提前发现接近预算线的消费分类。", accent: "#dc2626", delta: "-4.20%" },
+  记账: { label: "记账", title: "快速确认收支", detail: "手动或 AI 解析后确认每一笔收入支出。", accent: "#16a34a", delta: "+12 笔" },
+  报表: { label: "报表", title: "消费趋势分析", detail: "用月度趋势和分类占比理解消费结构。", accent: "#7c3aed", delta: "+8.04%" },
+  目标: { label: "目标", title: "储蓄目标进度", detail: "把半年存款、旅行基金等目标拆成进度。", accent: "#ea580c", delta: "68%" }
 };
 
-const transactions = [
-  ["星巴克咖啡", "餐饮", "-36.00"],
-  ["地铁 2 号线", "交通", "-6.00"],
-  ["工资收入", "薪资", "+12,600.00"]
-];
+const previewData: Record<
+  string,
+  {
+    primaryLabel: string;
+    primaryValue: string;
+    statusCards: Array<{ label: string; value: string; width: string; icon: typeof Target; detail: string; tone: string }>;
+    metrics: Array<{ label: string; value: string; tone: string; icon: typeof Target }>;
+    listTitle: string;
+    listBadge: string;
+    items: Array<[string, string, string]>;
+    insight: string;
+    tags: [string, string];
+  }
+> = {
+  首页: {
+    primaryLabel: "总资产净值",
+    primaryValue: "¥128,750.00",
+    statusCards: [
+      { label: "储蓄目标", value: "68%", width: "68%", icon: Target, detail: "半年存款目标", tone: "text-charcoal" },
+      { label: "预算健康", value: "良好", width: "82%", icon: ShieldCheck, detail: "预算剩余 32%", tone: "text-emerald-700" }
+    ],
+    metrics: [
+      { label: "本月收入", value: "¥18,600.00", tone: "text-emerald-700", icon: CircleDollarSign },
+      { label: "本月支出", value: "¥8,340.00", tone: "text-red-700", icon: ReceiptText },
+      { label: "本月结余", value: "¥10,260.00", tone: "text-charcoal", icon: PiggyBank },
+      { label: "储蓄率", value: "55%", tone: "text-charcoal", icon: Target }
+    ],
+    listTitle: "最近交易",
+    listBadge: "3 笔",
+    items: [
+      ["星巴克咖啡", "餐饮", "-36.00"],
+      ["地铁 2 号线", "交通", "-6.00"],
+      ["工资收入", "薪资", "+12,600.00"]
+    ],
+    insight: "本月餐饮支出较上月增加，建议把日均餐饮控制在预算线以内。",
+    tags: ["餐饮 +12%", "预算剩余 32%"]
+  },
+  账户: {
+    primaryLabel: "账户总余额",
+    primaryValue: "¥128,750.00",
+    statusCards: [
+      { label: "活跃账户", value: "4 个", width: "80%", icon: WalletCards, detail: "现金/银行卡/微信/支付宝", tone: "text-charcoal" },
+      { label: "主账户占比", value: "62%", width: "62%", icon: CircleDollarSign, detail: "招商银行卡", tone: "text-blue-700" }
+    ],
+    metrics: [
+      { label: "银行卡", value: "¥92,500.00", tone: "text-charcoal", icon: WalletCards },
+      { label: "微信零钱", value: "¥3,240.00", tone: "text-charcoal", icon: CircleDollarSign },
+      { label: "支付宝", value: "¥28,600.00", tone: "text-charcoal", icon: CircleDollarSign },
+      { label: "现金", value: "¥4,410.00", tone: "text-charcoal", icon: CircleDollarSign }
+    ],
+    listTitle: "账户变动",
+    listBadge: "4 个",
+    items: [
+      ["招商银行卡", "主账户", "¥92,500.00"],
+      ["支付宝余额", "电子钱包", "¥28,600.00"],
+      ["微信零钱", "日常消费", "¥3,240.00"]
+    ],
+    insight: "银行卡仍是主要资金池，日常消费账户余额适中，可以继续保持分账户管理。",
+    tags: ["主账户 62%", "电子钱包 25%"]
+  },
+  预算: {
+    primaryLabel: "本月预算剩余",
+    primaryValue: "¥3,660.00",
+    statusCards: [
+      { label: "预算健康", value: "良好", width: "82%", icon: ShieldCheck, detail: "总体未超支", tone: "text-emerald-700" },
+      { label: "高风险分类", value: "1 个", width: "42%", icon: ReceiptText, detail: "餐饮接近预算线", tone: "text-red-700" }
+    ],
+    metrics: [
+      { label: "月预算", value: "¥12,000.00", tone: "text-charcoal", icon: Target },
+      { label: "已使用", value: "¥8,340.00", tone: "text-red-700", icon: ReceiptText },
+      { label: "剩余额度", value: "¥3,660.00", tone: "text-emerald-700", icon: PiggyBank },
+      { label: "使用率", value: "69.5%", tone: "text-charcoal", icon: LineChart }
+    ],
+    listTitle: "预算分类",
+    listBadge: "4 类",
+    items: [
+      ["餐饮预算", "已用 84%", "¥420 剩余"],
+      ["交通预算", "已用 51%", "¥392 剩余"],
+      ["娱乐预算", "已用 38%", "¥620 剩余"]
+    ],
+    insight: "餐饮预算已经进入高关注区，建议接下来优先控制外食和饮品支出。",
+    tags: ["餐饮 84%", "交通 51%"]
+  },
+  记账: {
+    primaryLabel: "今日已记账",
+    primaryValue: "12 笔",
+    statusCards: [
+      { label: "待确认", value: "2 笔", width: "30%", icon: ReceiptText, detail: "AI 解析后待确认", tone: "text-charcoal" },
+      { label: "完成率", value: "86%", width: "86%", icon: ShieldCheck, detail: "今日记录完整度", tone: "text-emerald-700" }
+    ],
+    metrics: [
+      { label: "收入笔数", value: "1 笔", tone: "text-emerald-700", icon: CircleDollarSign },
+      { label: "支出笔数", value: "11 笔", tone: "text-red-700", icon: ReceiptText },
+      { label: "平均支出", value: "¥42.80", tone: "text-charcoal", icon: LineChart },
+      { label: "AI 解析", value: "5 笔", tone: "text-charcoal", icon: Bot }
+    ],
+    listTitle: "待确认记录",
+    listBadge: "2 笔",
+    items: [
+      ["午餐 28 元", "AI 识别：餐饮", "待确认"],
+      ["打车 19 元", "AI 识别：交通", "待确认"],
+      ["便利店", "手动记录", "-12.00"]
+    ],
+    insight: "今天的小额消费较多，建议晚上统一确认待处理记录，避免漏账。",
+    tags: ["待确认 2", "AI 解析 5"]
+  },
+  报表: {
+    primaryLabel: "本月净结余",
+    primaryValue: "¥10,260.00",
+    statusCards: [
+      { label: "同比趋势", value: "+8.04%", width: "76%", icon: LineChart, detail: "较上月改善", tone: "text-emerald-700" },
+      { label: "最大支出", value: "餐饮", width: "58%", icon: ReceiptText, detail: "占支出 31%", tone: "text-charcoal" }
+    ],
+    metrics: [
+      { label: "餐饮占比", value: "31%", tone: "text-charcoal", icon: ReceiptText },
+      { label: "交通占比", value: "17%", tone: "text-charcoal", icon: LineChart },
+      { label: "购物占比", value: "14%", tone: "text-charcoal", icon: CircleDollarSign },
+      { label: "娱乐占比", value: "9%", tone: "text-charcoal", icon: PiggyBank }
+    ],
+    listTitle: "分类排行",
+    listBadge: "Top 3",
+    items: [
+      ["餐饮", "本月最高", "¥2,585.00"],
+      ["交通", "通勤稳定", "¥1,418.00"],
+      ["购物", "较上月下降", "¥1,168.00"]
+    ],
+    insight: "消费结构整体稳定，餐饮仍是最大的弹性支出项，可以作为下月优化重点。",
+    tags: ["餐饮 31%", "购物 -6%"]
+  },
+  目标: {
+    primaryLabel: "储蓄目标进度",
+    primaryValue: "68%",
+    statusCards: [
+      { label: "目标金额", value: "¥20,000", width: "100%", icon: Target, detail: "半年存款计划", tone: "text-charcoal" },
+      { label: "已存金额", value: "¥13,600", width: "68%", icon: PiggyBank, detail: "还差 ¥6,400", tone: "text-emerald-700" }
+    ],
+    metrics: [
+      { label: "目标金额", value: "¥20,000", tone: "text-charcoal", icon: Target },
+      { label: "已完成", value: "¥13,600", tone: "text-emerald-700", icon: PiggyBank },
+      { label: "剩余", value: "¥6,400", tone: "text-charcoal", icon: CircleDollarSign },
+      { label: "预计完成", value: "2 月", tone: "text-charcoal", icon: LineChart }
+    ],
+    listTitle: "目标拆解",
+    listBadge: "3 项",
+    items: [
+      ["旅行基金", "进度 68%", "¥13,600"],
+      ["月存计划", "本月目标", "¥3,000"],
+      ["自动提醒", "每周复盘", "开启"]
+    ],
+    insight: "储蓄目标推进顺利，如果本月继续保持 55% 储蓄率，预计可提前完成。",
+    tags: ["进度 68%", "还差 32%"]
+  }
+};
 
 export default function LandingPage() {
   const router = useRouter();
@@ -151,6 +299,8 @@ export default function LandingPage() {
 
 function ProductPreview({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) {
   const meta = previewMeta[activeTab];
+  const data = previewData[activeTab];
+  const [activeMetric, setActiveMetric] = useState("总资产净值");
   return (
     <div className="wm-fade-up rounded-xl border border-line bg-white/35 p-2 shadow-focus sm:p-3" style={{ animationDelay: "120ms" }}>
       <div className="rounded-lg border border-line bg-cream p-3 sm:p-5">
@@ -161,7 +311,10 @@ function ProductPreview({ activeTab, setActiveTab }: { activeTab: string; setAct
                 key={tab}
                 className={`shrink-0 rounded-md px-4 py-3 text-center text-sm transition ${activeTab === tab ? "bg-[#ebe8df] text-charcoal shadow-insetButton" : "text-muted hover:bg-white/60 hover:text-charcoal"}`}
                 type="button"
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setActiveMetric(tab === "目标" ? "储蓄目标" : tab === "预算" ? "预算健康" : "总资产净值");
+                }}
               >
                 {tab}
               </button>
@@ -182,15 +335,19 @@ function ProductPreview({ activeTab, setActiveTab }: { activeTab: string; setAct
 
             <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(210px,0.65fr)]">
               <div className="rounded-md border border-line bg-[#fbfaf6] p-4 sm:p-5">
-                <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                <button
+                  className="grid w-full gap-4 rounded-md text-left transition hover:bg-white/30 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"
+                  type="button"
+                  onClick={() => setActiveMetric("总资产净值")}
+                >
                   <div className="min-w-0">
-                    <p className="text-sm text-muted">总资产净值</p>
-                    <p className="mt-2 whitespace-nowrap text-[clamp(2rem,3.6vw,2.65rem)] font-semibold leading-none">¥128,750.00</p>
+                    <p className="text-sm text-muted">{data.primaryLabel}</p>
+                    <p className="mt-2 whitespace-nowrap text-[clamp(2rem,3.6vw,2.65rem)] font-semibold leading-none">{data.primaryValue}</p>
                   </div>
-                  <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                    较上月 +6.72%
+                  <div className="w-fit rounded-full border border-emerald-200 bg-emerald-50/70 px-3 py-1.5 text-xs text-emerald-700 sm:justify-self-end">
+                    较上月 {meta.delta}
                   </div>
-                </div>
+                </button>
                 <div className="mt-6 rounded-md border border-line bg-cream/70 p-3">
                   <svg className="h-28 w-full" viewBox="0 0 420 120" role="img" aria-label="财务趋势曲线">
                     <path d="M10 92 C58 78, 83 83, 116 65 S173 62, 210 73 S279 48, 320 47 S368 43, 410 25" fill="none" stroke={meta.accent} strokeLinecap="round" strokeWidth="4" className="wm-line-draw" />
@@ -206,49 +363,52 @@ function ProductPreview({ activeTab, setActiveTab }: { activeTab: string; setAct
               </div>
 
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
-                {[
-                  ["储蓄目标", "68%", Target],
-                  ["预算健康", "良好", ShieldCheck]
-                ].map(([label, value, Icon]) => (
-                  <div key={label as string} className="rounded-md border border-line bg-white/35 p-4">
+                {data.statusCards.map(({ label, value, width, icon: Icon, detail, tone }) => (
+                  <button
+                    key={label}
+                    className={`rounded-md border border-line bg-white/35 p-4 text-left transition hover:-translate-y-0.5 hover:bg-white/60 hover:shadow-focus ${activeMetric === label ? "ring-2 ring-[#d4a017]/35" : ""}`}
+                    type="button"
+                    onClick={() => setActiveMetric(label)}
+                  >
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs text-muted">{label as string}</p>
+                      <p className="text-xs text-muted">{label}</p>
                       <Icon className="h-4 w-4 text-[#d4a017]" />
                     </div>
-                    <p className="mt-3 text-2xl font-semibold">{value as string}</p>
+                    <p className={`mt-3 text-2xl font-semibold ${tone}`}>{value}</p>
+                    <p className="mt-1 text-xs text-muted">{detail}</p>
                     <div className="mt-4 h-2 overflow-hidden rounded-full bg-line">
-                      <div className="h-full rounded-full bg-[#d4a017]" style={{ width: label === "储蓄目标" ? "68%" : "82%" }} />
+                      <div className="wm-progress-fill h-full rounded-full bg-[#d4a017]" style={{ width }} />
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
 
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              {[
-                ["本月收入", "¥18,600.00", "text-emerald-700", CircleDollarSign],
-                ["本月支出", "¥8,340.00", "text-red-700", ReceiptText],
-                ["本月结余", "¥10,260.00", "text-charcoal", PiggyBank],
-                ["储蓄率", "55%", "text-charcoal", Target]
-              ].map(([label, value, tone, Icon]) => (
-                <div key={label as string} className="rounded-md border border-line bg-white/35 p-4">
+              {data.metrics.map(({ label, value, tone, icon: Icon }) => (
+                <button
+                  key={label}
+                  className={`rounded-md border border-line bg-white/35 p-4 text-left transition hover:-translate-y-0.5 hover:bg-white/60 hover:shadow-focus ${activeMetric === label ? "ring-2 ring-[#d4a017]/35" : ""}`}
+                  type="button"
+                  onClick={() => setActiveMetric(label)}
+                >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs leading-5 text-muted">{label as string}</p>
+                    <p className="text-xs leading-5 text-muted">{label}</p>
                     <Icon className="h-4 w-4 text-[#d4a017]" />
                   </div>
-                  <p className={`mt-3 whitespace-nowrap text-[clamp(1.45rem,2.6vw,1.9rem)] font-semibold leading-tight ${tone as string}`}>{value as string}</p>
-                </div>
+                  <p className={`mt-3 whitespace-nowrap text-[clamp(1.45rem,2.6vw,1.9rem)] font-semibold leading-tight ${tone}`}>{value}</p>
+                </button>
               ))}
             </div>
 
             <div className="mt-3 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(220px,0.82fr)]">
               <div className="rounded-md border border-line bg-white/35 p-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">最近交易</h3>
-                  <span className="rounded-full bg-[#ebe8df] px-2 py-1 text-xs text-muted">3 笔</span>
+                  <h3 className="font-semibold">{data.listTitle}</h3>
+                  <span className="rounded-full bg-[#ebe8df] px-2 py-1 text-xs text-muted">{data.listBadge}</span>
                 </div>
                 <div className="mt-4 grid gap-3 text-sm">
-                  {transactions.map(([name, type, amount]) => (
+                  {data.items.map(([name, type, amount]) => (
                     <div key={name} className="flex items-center justify-between gap-3 border-b border-line pb-3 last:border-0 last:pb-0">
                       <span className="min-w-0">
                         <span className="block truncate">{name}</span>
@@ -264,13 +424,15 @@ function ProductPreview({ activeTab, setActiveTab }: { activeTab: string; setAct
                   <PiggyBank className="h-4 w-4 text-[#d4a017]" />
                   AI 洞察
                 </div>
-                <p className="mt-4 text-sm leading-6 text-muted">本月餐饮支出较上月增加，建议把日均餐饮控制在预算线以内。</p>
+                <p className="mt-4 text-sm leading-6 text-muted">
+                  {data.insight}
+                </p>
                 <div className="mt-5 h-2 overflow-hidden rounded-full bg-line">
                   <div className="wm-soft-pulse h-2 w-[68%] rounded-full bg-[#d4a017]" />
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-                  <span className="rounded-md border border-line px-3 py-2 text-muted">餐饮 +12%</span>
-                  <span className="rounded-md border border-line px-3 py-2 text-muted">预算剩余 32%</span>
+                  <span className="rounded-md border border-line px-3 py-2 text-muted">{data.tags[0]}</span>
+                  <span className="rounded-md border border-line px-3 py-2 text-muted">{data.tags[1]}</span>
                 </div>
               </div>
             </div>

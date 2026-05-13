@@ -13,6 +13,7 @@ export type PageResponse<T> = {
 
 export type AuthUser = {
   id: string;
+  email: string;
   username: string;
   nickname: string;
   defaultCurrency: string;

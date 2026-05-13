@@ -62,6 +62,15 @@ html {
   }
 }
 
+@keyframes wm-progress-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 .wm-fade-up {
   animation: wm-fade-up 680ms ease both;
 }
@@ -74,4 +83,9 @@ html {
 
 .wm-soft-pulse {
   animation: wm-soft-pulse 2.4s ease-in-out infinite;
+}
+
+.wm-progress-fill {
+  transform-origin: left;
+  animation: wm-progress-fill 900ms ease-out both;
 }

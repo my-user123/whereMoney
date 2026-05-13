@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Eye, LineChart, LockKeyhole, Mail, Sparkles } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,10 +17,10 @@ export default function LoginPage() {
   const [mode, setMode] = useState<LoginMode>("password");
   const [form, setForm] = useState({ email: "", password: "", code: "" });
   const [countdown, setCountdown] = useState(0);
-  const [devCode, setDevCode] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (countdown <= 0) {
@@ -32,7 +32,6 @@ export default function LoginPage() {
 
   async function requestCode() {
     setError("");
-    setDevCode("");
     if (!form.email) {
       setError("请先输入邮箱");
       return;
@@ -40,7 +39,6 @@ export default function LoginPage() {
     try {
       const data = await authApi.requestCode({ email: form.email });
       setCountdown(data.expiresInSeconds);
-      setDevCode(data.devCode);
     } catch (err) {
       setError(err instanceof Error ? err.message : "验证码发送失败");
     }
@@ -66,105 +64,123 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-cream px-4 py-6 text-charcoal">
+    <main className="min-h-screen bg-cream px-4 py-5 text-charcoal sm:py-8">
       {redirecting ? <RedirectOverlay /> : null}
-      <div className="mx-auto grid max-w-6xl overflow-hidden rounded-xl border border-line lg:min-h-[760px] lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="wm-fade-up border-b border-line p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-12">
+      <div className="mx-auto flex min-h-[calc(100vh-40px)] max-w-6xl flex-col">
+        <header className="flex items-center justify-between">
           <Link className="flex items-center gap-2 font-semibold" href="/">
             <span className="grid h-9 w-9 place-items-center rounded-md border border-line text-[#d4a017]">
               <LockKeyhole className="h-4 w-4" />
             </span>
             WhereMoney
           </Link>
-          <div className="mt-12 max-w-xl">
-            <p className="text-sm text-muted">欢迎回来</p>
-            <h1 className="mt-4 text-[clamp(2.4rem,7vw,4.8rem)] font-semibold leading-[1.04]">你的财务状况，一目了然</h1>
-            <p className="mt-5 text-sm leading-6 text-muted sm:text-base">
-              登录后进入个人财务工作台，继续查看账户余额、近期交易、消费结构和 AI 洞察。
-            </p>
-          </div>
-          <div className="mt-8 grid gap-3 text-sm">
-            {["邮箱密码或验证码登录", "多维度分析，发现消费规律", "预算管理，控制支出", "数据安全，隐私保护"].map((item) => (
-              <div key={item} className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-                {item}
-              </div>
-            ))}
-          </div>
-          <div className="mt-10 rounded-md border border-line bg-white/30 p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm text-muted">本月结余</p>
-                <p className="mt-1 text-3xl font-semibold">¥7,376.50</p>
-              </div>
-              <span className="text-sm text-emerald-700">+6.0%</span>
-            </div>
-            <svg className="mt-6 h-24 w-full" viewBox="0 0 420 110" role="img" aria-label="结余趋势">
-              <path className="wm-line-draw" d="M10 82 C65 65, 112 74, 164 50 S250 62, 300 39 S365 42, 410 24" fill="none" stroke="#16a34a" strokeLinecap="round" strokeWidth="4" />
-            </svg>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-md border border-line p-4">
-                <LineChart className="h-4 w-4 text-[#d4a017]" />
-                <p className="mt-3 text-sm font-semibold">支出占比</p>
-                <p className="mt-2 text-xs text-muted">餐饮 31% · 交通 17%</p>
-              </div>
-              <div className="rounded-md border border-line p-4">
-                <Sparkles className="h-4 w-4 text-[#d4a017]" />
-                <p className="mt-3 text-sm font-semibold">AI 洞察</p>
-                <p className="mt-2 text-xs text-muted">本月订阅支出略高</p>
-              </div>
-            </div>
-          </div>
-        </section>
+          <p className="text-sm text-muted">
+            还没有账号？{" "}
+            <Link className="font-medium text-charcoal underline" href="/auth/register">
+              立即注册
+            </Link>
+          </p>
+        </header>
 
-        <section className="wm-fade-up flex items-center p-6 sm:p-8 lg:p-12" style={{ animationDelay: "120ms" }}>
-          <div className="w-full">
-            <div className="mb-10 flex items-center justify-between gap-4 text-sm">
-              <span className="text-muted">还没有账号？</span>
-              <Link className="font-medium underline" href="/auth/register">
-                立即注册
-              </Link>
+        <section className="grid flex-1 items-center gap-8 py-10 lg:grid-cols-[0.92fr_1.08fr] lg:gap-12">
+          <div className="wm-fade-up hidden lg:block">
+            <p className="inline-flex rounded-full border border-line px-3 py-1 text-xs text-muted">欢迎回来</p>
+            <h1 className="mt-5 max-w-xl text-5xl font-semibold leading-[1.06]">继续掌控你的个人财务节奏</h1>
+            <p className="mt-5 max-w-lg text-base leading-7 text-muted">
+              登录后查看账户余额、近期交易、预算状态与 AI 洞察，让每一次消费都能被理解和追踪。
+            </p>
+            <div className="mt-8 grid max-w-lg gap-3">
+              {["邮箱密码或验证码登录", "预算与支出趋势同步查看", "登录成功后自动进入 Dashboard"].map((item) => (
+                <div key={item} className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                  {item}
+                </div>
+              ))}
             </div>
-            <h2 className="text-3xl font-semibold sm:text-4xl">登录 WhereMoney</h2>
-            <div className="mt-6 grid grid-cols-2 rounded-md border border-line p-1 text-sm">
-              <button className={`rounded px-3 py-2 ${mode === "password" ? "bg-charcoal text-white" : "text-muted"}`} type="button" onClick={() => setMode("password")}>
+            <div className="mt-10 rounded-md border border-line bg-white/30 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm text-muted">本月结余</p>
+                  <p className="mt-2 text-4xl font-semibold">¥7,376.50</p>
+                </div>
+                <span className="rounded-full border border-emerald-200 bg-emerald-50/70 px-3 py-1.5 text-xs text-emerald-700">+6.0%</span>
+              </div>
+              <svg className="mt-6 h-24 w-full" viewBox="0 0 420 110" role="img" aria-label="结余趋势">
+                <path className="wm-line-draw" d="M10 82 C65 65, 112 74, 164 50 S250 62, 300 39 S365 42, 410 24" fill="none" stroke="#16a34a" strokeLinecap="round" strokeWidth="4" />
+              </svg>
+            </div>
+          </div>
+
+          <div className="wm-fade-up mx-auto w-full max-w-[520px] rounded-xl border border-line bg-[#fbfaf6] p-5 shadow-focus sm:p-7 lg:justify-self-end" style={{ animationDelay: "90ms" }}>
+            <div className="mb-7">
+              <p className="text-sm text-muted">登录账户</p>
+              <h2 className="mt-2 text-3xl font-semibold sm:text-4xl">欢迎回到 WhereMoney</h2>
+            </div>
+
+            <div className="grid grid-cols-2 rounded-md border border-line bg-cream p-1 text-sm">
+              <button className={`rounded px-3 py-2.5 transition ${mode === "password" ? "bg-charcoal text-white shadow-insetButton" : "text-muted hover:text-charcoal"}`} type="button" onClick={() => setMode("password")}>
                 邮箱密码
               </button>
-              <button className={`rounded px-3 py-2 ${mode === "code" ? "bg-charcoal text-white" : "text-muted"}`} type="button" onClick={() => setMode("code")}>
+              <button className={`rounded px-3 py-2.5 transition ${mode === "code" ? "bg-charcoal text-white shadow-insetButton" : "text-muted hover:text-charcoal"}`} type="button" onClick={() => setMode("code")}>
                 邮箱验证码
               </button>
             </div>
+
             <form className="mt-6 grid gap-5" onSubmit={submit}>
               <Field label="邮箱">
-                <Input required type="email" placeholder="name@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                <Input required className="h-12 w-full bg-cream" type="email" placeholder="name@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </Field>
+
               {mode === "password" ? (
                 <Field label="密码">
                   <div className="relative">
-                    <Input required minLength={6} type="password" placeholder="请输入密码" className="pr-10" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-                    <Eye className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-muted" />
+                    <Input required minLength={6} type={showPassword ? "text" : "password"} placeholder="请输入密码" className="h-12 w-full bg-cream pr-11" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                    <button
+                      aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                      className="absolute right-3 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center text-muted transition hover:text-charcoal"
+                      type="button"
+                      onClick={() => setShowPassword((value) => !value)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </Field>
               ) : (
                 <Field label="验证码">
                   <div className="grid gap-2 sm:grid-cols-[1fr_132px]">
-                    <Input required inputMode="numeric" maxLength={6} pattern="\\d{6}" placeholder="6 位验证码" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
-                    <Button type="button" variant="outline" disabled={countdown > 0} onClick={requestCode}>
+                    <Input
+                      required
+                      className="h-12 w-full bg-cream"
+                      inputMode="numeric"
+                      maxLength={6}
+                      pattern="[0-9]{6}"
+                      placeholder="6 位验证码"
+                      title="请输入 6 位数字验证码"
+                      value={form.code}
+                      onChange={(e) => setForm({ ...form, code: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+                    />
+                    <Button className="h-12" type="button" variant="outline" disabled={countdown > 0} onClick={requestCode}>
                       {countdown > 0 ? `${countdown}s` : "获取验证码"}
                     </Button>
                   </div>
-                  {devCode ? <span className="text-xs text-muted">开发环境验证码：{devCode}</span> : null}
+                  <p className="text-xs text-muted">验证码 60 秒内有效，过期后需要重新获取。</p>
                 </Field>
               )}
+
               {error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+
               <Button className="h-12 text-base" disabled={submitting} type="submit">
                 {submitting ? "登录中..." : "登录"}
               </Button>
             </form>
-            <p className="mt-6 flex items-center gap-2 text-xs text-muted">
-              <Mail className="h-4 w-4" />
-              验证码 60 秒内有效，过期后需要重新获取。
-            </p>
+
+            {mode === "code" ? (
+              <p className="mt-5 flex items-center gap-2 text-xs text-muted">
+                <Mail className="h-4 w-4" />
+                使用邮箱收到的一次性验证码登录。
+              </p>
+            ) : null}
+
           </div>
         </section>
       </div>

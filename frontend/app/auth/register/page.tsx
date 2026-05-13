@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Eye, Mail, ShieldCheck, Wallet } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { authApi } from "@/lib/api/endpoints";
 import { useAuthStore } from "@/store/auth-store";
-
-const categoryChips = ["餐饮", "交通", "购物", "娱乐", "薪资", "兼职"];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -19,6 +17,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -55,34 +54,16 @@ export default function RegisterPage() {
             <p className="text-sm text-muted">创建你的账号</p>
             <h1 className="mt-4 text-[clamp(2.4rem,7vw,4.8rem)] font-semibold leading-[1.04]">开始你的财务管理之旅</h1>
             <p className="mt-5 text-sm leading-6 text-muted sm:text-base">
-              使用邮箱和密码即可注册。默认币种进入系统后为人民币，你可以在个人设置中主动修改。
+              使用邮箱和密码即可注册，进入系统后再按个人习惯完善账户与偏好设置。
             </p>
           </div>
           <div className="mt-8 grid gap-3 text-sm">
-            {["邮箱注册，快速上手", "默认分类自动准备", "默认币种为 CNY 人民币", "数据安全，隐私保护"].map((item) => (
+            {["邮箱注册，快速上手", "进入系统后完善账户", "数据安全，隐私保护"].map((item) => (
               <div key={item} className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-700" />
                 {item}
               </div>
             ))}
-          </div>
-          <div className="mt-10 rounded-md border border-line bg-white/30 p-5">
-            <div className="flex items-center gap-4">
-              <span className="grid h-12 w-12 place-items-center rounded-full border border-line">
-                <ShieldCheck className="h-5 w-5 text-[#d4a017]" />
-              </span>
-              <div>
-                <p className="font-semibold">默认分类已准备好</p>
-                <p className="mt-1 text-sm text-muted">注册后可按你的习惯继续编辑</p>
-              </div>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {categoryChips.map((chip) => (
-                <span key={chip} className="rounded-md border border-line px-4 py-3 text-sm">
-                  {chip}
-                </span>
-              ))}
-            </div>
           </div>
         </section>
 
@@ -97,12 +78,19 @@ export default function RegisterPage() {
             <h2 className="text-3xl font-semibold sm:text-4xl">注册 WhereMoney</h2>
             <form className="mt-8 grid gap-5" onSubmit={submit}>
               <Field label="邮箱">
-                <Input required type="email" placeholder="name@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                <Input required className="h-12 w-full" type="email" placeholder="name@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </Field>
               <Field label="密码">
-                <div className="relative">
-                  <Input required minLength={6} type="password" placeholder="至少 6 位密码" className="pr-10" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-                  <Eye className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-muted" />
+                <div className="relative w-full">
+                  <Input required minLength={6} type={showPassword ? "text" : "password"} placeholder="至少 6 位密码" className="h-12 w-full pr-11" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                  <button
+                    aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                    className="absolute right-3 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center text-muted transition hover:text-charcoal"
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </Field>
               <label className="flex items-start gap-2 text-sm text-muted">
@@ -114,10 +102,6 @@ export default function RegisterPage() {
                 {submitting ? "注册中..." : "注册"}
               </Button>
             </form>
-            <p className="mt-6 flex items-center gap-2 text-xs text-muted">
-              <Mail className="h-4 w-4" />
-              注册成功后会直接进入系统主页，默认币种为 CNY。
-            </p>
           </div>
         </section>
       </div>

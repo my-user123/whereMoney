@@ -19,7 +19,7 @@ export const authApi = {
   loginWithCode: (body: { email: string; code: string }) =>
     apiRequest<AuthResponse>("/api/v1/auth/login/code", { method: "POST", body: JSON.stringify(body) }),
   requestCode: (body: { email: string }) =>
-    apiRequest<{ expiresInSeconds: number; devCode: string }>("/api/v1/auth/verification-codes", {
+    apiRequest<{ expiresInSeconds: number }>("/api/v1/auth/verification-codes", {
       method: "POST",
       body: JSON.stringify(body)
     }),
