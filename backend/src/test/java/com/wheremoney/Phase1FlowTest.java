@@ -121,6 +121,7 @@ class Phase1FlowTest {
   }
 
   private String register(String username) throws Exception {
+    String email = username + "@example.com";
     MvcResult result =
         mockMvc
             .perform(
@@ -129,14 +130,10 @@ class Phase1FlowTest {
                     .content(
                         json(
                             Map.of(
-                                "username",
-                                username,
+                                "email",
+                                email,
                                 "password",
-                                "secret123",
-                                "nickname",
-                                username,
-                                "defaultCurrency",
-                                "CNY"))))
+                                "secret123"))))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
             .andReturn();
