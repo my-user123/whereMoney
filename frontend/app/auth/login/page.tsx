@@ -1,29 +1,63 @@
 "use client";
 
-import { Apple, CheckCircle2, Eye, LineChart, LockKeyhole, Sparkles } from "lucide-react";
+import { CheckCircle2, Eye, LineChart, LockKeyhole, Mail, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { authApi } from "@/lib/api/endpoints";
 import { useAuthStore } from "@/store/auth-store";
 
+type LoginMode = "password" | "code";
+
 export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [mode, setMode] = useState<LoginMode>("password");
+  const [form, setForm] = useState({ email: "", password: "", code: "" });
+  const [countdown, setCountdown] = useState(0);
+  const [devCode, setDevCode] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
+
+  useEffect(() => {
+    if (countdown <= 0) {
+      return;
+    }
+    const timer = window.setTimeout(() => setCountdown((value) => value - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [countdown]);
+
+  async function requestCode() {
+    setError("");
+    setDevCode("");
+    if (!form.email) {
+      setError("请先输入邮箱");
+      return;
+    }
+    try {
+      const data = await authApi.requestCode({ email: form.email });
+      setCountdown(data.expiresInSeconds);
+      setDevCode(data.devCode);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "验证码发送失败");
+    }
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
     setSubmitting(true);
     try {
-      const data = await authApi.login(form);
+      const data =
+        mode === "password"
+          ? await authApi.login({ email: form.email, password: form.password })
+          : await authApi.loginWithCode({ email: form.email, code: form.code });
       setAuth(data.token, data.user);
-      router.replace("/dashboard");
+      setRedirecting(true);
+      window.setTimeout(() => router.replace("/dashboard"), 650);
     } catch (err) {
       setError(err instanceof Error ? err.message : "登录失败");
     } finally {
@@ -33,114 +67,124 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-cream px-4 py-6 text-charcoal">
-      <div className="mx-auto max-w-6xl rounded-xl border border-line">
-        <header className="flex items-center justify-between border-b border-line px-5 py-4">
+      {redirecting ? <RedirectOverlay /> : null}
+      <div className="mx-auto grid max-w-6xl overflow-hidden rounded-xl border border-line lg:min-h-[760px] lg:grid-cols-[0.95fr_1.05fr]">
+        <section className="wm-fade-up border-b border-line p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-12">
           <Link className="flex items-center gap-2 font-semibold" href="/">
-            <span className="grid h-8 w-8 place-items-center rounded-md border border-line text-[#d4a017]">
+            <span className="grid h-9 w-9 place-items-center rounded-md border border-line text-[#d4a017]">
               <LockKeyhole className="h-4 w-4" />
             </span>
             WhereMoney
           </Link>
-          <p className="text-sm text-muted">
-            还没有账号？{" "}
-            <Link className="text-charcoal underline" href="/auth/register">
-              立即注册
-            </Link>
-          </p>
-        </header>
-        <div className="grid min-h-[660px] lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="border-b border-line p-6 lg:border-b-0 lg:border-r lg:p-10">
-            <h1 className="max-w-md text-4xl font-semibold leading-[1.08] tracking-[-0.8px] md:text-5xl">
-              你的财务状况，一目了然
-            </h1>
-            <p className="mt-5 max-w-md text-sm leading-6 text-muted">
-              回到你的个人财务工作台，继续查看账户余额、近期交易、消费结构和 AI 洞察。
+          <div className="mt-12 max-w-xl">
+            <p className="text-sm text-muted">欢迎回来</p>
+            <h1 className="mt-4 text-[clamp(2.4rem,7vw,4.8rem)] font-semibold leading-[1.04]">你的财务状况，一目了然</h1>
+            <p className="mt-5 text-sm leading-6 text-muted sm:text-base">
+              登录后进入个人财务工作台，继续查看账户余额、近期交易、消费结构和 AI 洞察。
             </p>
-            <div className="mt-7 grid gap-3 text-sm">
-              {["AI 智能记账，省时省力", "多维度分析，发现消费规律", "预算管理，控制支出", "数据安全，隐私保护"].map((item) => (
-                <div className="flex items-center gap-2" key={item}>
-                  <CheckCircle2 className="h-4 w-4 text-green-700" />
-                  <span>{item}</span>
-                </div>
-              ))}
+          </div>
+          <div className="mt-8 grid gap-3 text-sm">
+            {["邮箱密码或验证码登录", "多维度分析，发现消费规律", "预算管理，控制支出", "数据安全，隐私保护"].map((item) => (
+              <div key={item} className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                {item}
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 rounded-md border border-line bg-white/30 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm text-muted">本月结余</p>
+                <p className="mt-1 text-3xl font-semibold">¥7,376.50</p>
+              </div>
+              <span className="text-sm text-emerald-700">+6.0%</span>
             </div>
-            <div className="mt-8 rounded-xl border border-line p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted">本月结余</p>
-                  <p className="mt-1 text-3xl font-semibold tracking-[-0.6px]">¥7,376.50</p>
-                </div>
-                <span className="text-sm text-green-700">+6.0%</span>
+            <svg className="mt-6 h-24 w-full" viewBox="0 0 420 110" role="img" aria-label="结余趋势">
+              <path className="wm-line-draw" d="M10 82 C65 65, 112 74, 164 50 S250 62, 300 39 S365 42, 410 24" fill="none" stroke="#16a34a" strokeLinecap="round" strokeWidth="4" />
+            </svg>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-md border border-line p-4">
+                <LineChart className="h-4 w-4 text-[#d4a017]" />
+                <p className="mt-3 text-sm font-semibold">支出占比</p>
+                <p className="mt-2 text-xs text-muted">餐饮 31% · 交通 17%</p>
               </div>
-              <div className="mt-5 h-24 rounded-md border border-line p-3">
-                <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 360 90">
-                  <path d="M0 68 C48 54 64 60 96 50 C134 38 144 34 186 42 C224 50 238 20 276 28 C318 36 328 14 360 18" fill="none" stroke="#16a34a" strokeWidth="3" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-lg border border-line p-4">
-                <LineChart className="h-5 w-5 text-[#d4a017]" />
-                <p className="mt-3 text-sm font-medium">支出占比</p>
-                <p className="mt-1 text-xs text-muted">餐饮 31% · 交通 17%</p>
-              </div>
-              <div className="rounded-lg border border-line p-4">
-                <Sparkles className="h-5 w-5 text-[#d4a017]" />
-                <p className="mt-3 text-sm font-medium">AI 洞察</p>
-                <p className="mt-1 text-xs text-muted">本月订阅支出略高</p>
+              <div className="rounded-md border border-line p-4">
+                <Sparkles className="h-4 w-4 text-[#d4a017]" />
+                <p className="mt-3 text-sm font-semibold">AI 洞察</p>
+                <p className="mt-2 text-xs text-muted">本月订阅支出略高</p>
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          <section className="flex items-center p-6 lg:p-10">
-            <form className="w-full" onSubmit={submit}>
-              <p className="text-sm text-muted">欢迎回来</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-[-0.6px]">登录你的 WhereMoney 账户</h2>
-              <div className="mt-8 grid gap-4">
-                <Field label="用户名">
-                  <Input required placeholder="请输入用户名" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
-                </Field>
+        <section className="wm-fade-up flex items-center p-6 sm:p-8 lg:p-12" style={{ animationDelay: "120ms" }}>
+          <div className="w-full">
+            <div className="mb-10 flex items-center justify-between gap-4 text-sm">
+              <span className="text-muted">还没有账号？</span>
+              <Link className="font-medium underline" href="/auth/register">
+                立即注册
+              </Link>
+            </div>
+            <h2 className="text-3xl font-semibold sm:text-4xl">登录 WhereMoney</h2>
+            <div className="mt-6 grid grid-cols-2 rounded-md border border-line p-1 text-sm">
+              <button className={`rounded px-3 py-2 ${mode === "password" ? "bg-charcoal text-white" : "text-muted"}`} type="button" onClick={() => setMode("password")}>
+                邮箱密码
+              </button>
+              <button className={`rounded px-3 py-2 ${mode === "code" ? "bg-charcoal text-white" : "text-muted"}`} type="button" onClick={() => setMode("code")}>
+                邮箱验证码
+              </button>
+            </div>
+            <form className="mt-6 grid gap-5" onSubmit={submit}>
+              <Field label="邮箱">
+                <Input required type="email" placeholder="name@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              </Field>
+              {mode === "password" ? (
                 <Field label="密码">
                   <div className="relative">
-                    <Input required className="w-full pr-10" placeholder="请输入密码" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-                    <Eye className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-muted" />
+                    <Input required minLength={6} type="password" placeholder="请输入密码" className="pr-10" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                    <Eye className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-muted" />
                   </div>
                 </Field>
-                <div className="flex items-center justify-between text-sm">
-                  <label className="flex items-center gap-2 text-muted">
-                    <input className="h-4 w-4 accent-charcoal" type="checkbox" />
-                    记住我
-                  </label>
-                  <button className="text-muted underline" type="button">
-                    忘记密码？
-                  </button>
-                </div>
-                {error ? <p className="text-sm text-red-700">{error}</p> : null}
-                <Button className="h-11 w-full" disabled={submitting} type="submit">
-                  {submitting ? "登录中..." : "登录"}
-                </Button>
-                <div className="relative py-2 text-center text-xs text-muted">
-                  <span className="bg-cream px-3">其他登录方式</span>
-                  <div className="-mt-2 border-t border-line" />
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  {["G", "微信"].map((item) => (
-                    <button className="h-11 rounded-md border border-line text-sm" key={item} type="button">
-                      {item}
-                    </button>
-                  ))}
-                  <button className="grid h-11 place-items-center rounded-md border border-line" type="button">
-                    <Apple className="h-4 w-4" />
-                  </button>
-                </div>
-                <p className="text-center text-xs leading-5 text-muted">
-                  登录即表示你同意用户协议和隐私政策
-                </p>
-              </div>
+              ) : (
+                <Field label="验证码">
+                  <div className="grid gap-2 sm:grid-cols-[1fr_132px]">
+                    <Input required inputMode="numeric" maxLength={6} pattern="\\d{6}" placeholder="6 位验证码" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+                    <Button type="button" variant="outline" disabled={countdown > 0} onClick={requestCode}>
+                      {countdown > 0 ? `${countdown}s` : "获取验证码"}
+                    </Button>
+                  </div>
+                  {devCode ? <span className="text-xs text-muted">开发环境验证码：{devCode}</span> : null}
+                </Field>
+              )}
+              {error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+              <Button className="h-12 text-base" disabled={submitting} type="submit">
+                {submitting ? "登录中..." : "登录"}
+              </Button>
             </form>
-          </section>
-        </div>
+            <p className="mt-6 flex items-center gap-2 text-xs text-muted">
+              <Mail className="h-4 w-4" />
+              验证码 60 秒内有效，过期后需要重新获取。
+            </p>
+          </div>
+        </section>
       </div>
     </main>
+  );
+}
+
+function RedirectOverlay() {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-cream/80 backdrop-blur-sm">
+      <div className="rounded-xl border border-line bg-cream p-6 text-center shadow-focus">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-charcoal text-white">
+          <CheckCircle2 className="h-6 w-6" />
+        </div>
+        <p className="mt-4 font-semibold">登录成功</p>
+        <p className="mt-2 text-sm text-muted">正在进入财务工作台...</p>
+        <div className="mt-5 h-1 w-52 overflow-hidden rounded-full bg-line">
+          <div className="h-full w-2/3 animate-pulse rounded-full bg-[#d4a017]" />
+        </div>
+      </div>
+    </div>
   );
 }

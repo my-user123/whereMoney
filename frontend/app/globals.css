@@ -27,3 +27,51 @@ select,
 textarea {
   background: #f7f4ed;
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes wm-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wm-line-draw {
+  from {
+    stroke-dashoffset: 520;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes wm-soft-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.wm-fade-up {
+  animation: wm-fade-up 680ms ease both;
+}
+
+.wm-line-draw {
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  animation: wm-line-draw 1300ms ease-out 220ms forwards;
+}
+
+.wm-soft-pulse {
+  animation: wm-soft-pulse 2.4s ease-in-out infinite;
+}

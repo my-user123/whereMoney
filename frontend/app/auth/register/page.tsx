@@ -1,11 +1,11 @@
 "use client";
 
-import { Apple, CheckCircle2, Eye, ShieldCheck, Wallet } from "lucide-react";
+import { CheckCircle2, Eye, Mail, ShieldCheck, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Select } from "@/components/ui/field";
+import { Field, Input } from "@/components/ui/field";
 import { authApi } from "@/lib/api/endpoints";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -14,18 +14,25 @@ const categoryChips = ["餐饮", "交通", "购物", "娱乐", "薪资", "兼职
 export default function RegisterPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
-  const [form, setForm] = useState({ username: "", password: "", nickname: "", defaultCurrency: "CNY" });
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
+    if (!agreed) {
+      setError("请先阅读并同意用户协议和隐私政策");
+      return;
+    }
     setSubmitting(true);
     try {
       const data = await authApi.register(form);
       setAuth(data.token, data.user);
-      router.replace("/dashboard");
+      setRedirecting(true);
+      window.setTimeout(() => router.replace("/dashboard"), 650);
     } catch (err) {
       setError(err instanceof Error ? err.message : "注册失败");
     } finally {
@@ -35,109 +42,102 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-cream px-4 py-6 text-charcoal">
-      <div className="mx-auto max-w-6xl rounded-xl border border-line">
-        <header className="flex items-center justify-between border-b border-line px-5 py-4">
+      {redirecting ? <RedirectOverlay /> : null}
+      <div className="mx-auto grid max-w-6xl overflow-hidden rounded-xl border border-line lg:min-h-[760px] lg:grid-cols-[0.95fr_1.05fr]">
+        <section className="wm-fade-up border-b border-line p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-12">
           <Link className="flex items-center gap-2 font-semibold" href="/">
-            <span className="grid h-8 w-8 place-items-center rounded-md border border-line text-[#d4a017]">
+            <span className="grid h-9 w-9 place-items-center rounded-md border border-line text-[#d4a017]">
               <Wallet className="h-4 w-4" />
             </span>
             WhereMoney
           </Link>
-          <p className="text-sm text-muted">
-            已有账号？{" "}
-            <Link className="text-charcoal underline" href="/auth/login">
-              去登录
-            </Link>
-          </p>
-        </header>
-        <div className="grid min-h-[680px] lg:grid-cols-[0.95fr_1.05fr]">
-          <section className="border-b border-line p-6 lg:border-b-0 lg:border-r lg:p-10">
-            <h1 className="max-w-md text-4xl font-semibold leading-[1.08] tracking-[-0.8px] md:text-5xl">
-              开始你的财务管理之旅
-            </h1>
-            <p className="mt-5 max-w-md text-sm leading-6 text-muted">
-              注册后即可获得默认分类，创建账户后就能开始记录收入支出，并在 Dashboard 查看财务概览。
+          <div className="mt-12 max-w-xl">
+            <p className="text-sm text-muted">创建你的账号</p>
+            <h1 className="mt-4 text-[clamp(2.4rem,7vw,4.8rem)] font-semibold leading-[1.04]">开始你的财务管理之旅</h1>
+            <p className="mt-5 text-sm leading-6 text-muted sm:text-base">
+              使用邮箱和密码即可注册。默认币种进入系统后为人民币，你可以在个人设置中主动修改。
             </p>
-            <div className="mt-7 grid gap-3 text-sm">
-              {["免费注册，快速上手", "默认分类已为你准备", "支持多币种账户", "数据安全，隐私保护"].map((item) => (
-                <div className="flex items-center gap-2" key={item}>
-                  <CheckCircle2 className="h-4 w-4 text-green-700" />
-                  <span>{item}</span>
-                </div>
+          </div>
+          <div className="mt-8 grid gap-3 text-sm">
+            {["邮箱注册，快速上手", "默认分类自动准备", "默认币种为 CNY 人民币", "数据安全，隐私保护"].map((item) => (
+              <div key={item} className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                {item}
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 rounded-md border border-line bg-white/30 p-5">
+            <div className="flex items-center gap-4">
+              <span className="grid h-12 w-12 place-items-center rounded-full border border-line">
+                <ShieldCheck className="h-5 w-5 text-[#d4a017]" />
+              </span>
+              <div>
+                <p className="font-semibold">默认分类已准备好</p>
+                <p className="mt-1 text-sm text-muted">注册后可按你的习惯继续编辑</p>
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {categoryChips.map((chip) => (
+                <span key={chip} className="rounded-md border border-line px-4 py-3 text-sm">
+                  {chip}
+                </span>
               ))}
             </div>
-            <div className="mt-8 rounded-xl border border-line p-5">
-              <div className="flex items-center gap-3">
-                <span className="grid h-12 w-12 place-items-center rounded-full border border-line">
-                  <ShieldCheck className="h-5 w-5 text-[#d4a017]" />
-                </span>
-                <div>
-                  <p className="font-medium">默认分类已准备好</p>
-                  <p className="text-sm text-muted">注册后可按你的习惯继续编辑</p>
-                </div>
-              </div>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {categoryChips.map((item) => (
-                  <span className="rounded-md border border-line px-3 py-2 text-sm" key={item}>
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </section>
+          </div>
+        </section>
 
-          <section className="flex items-center p-6 lg:p-10">
-            <form className="w-full" onSubmit={submit}>
-              <p className="text-sm text-muted">创建你的账号</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-[-0.6px]">让 WhereMoney 接住你的第一本账</h2>
-              <div className="mt-8 grid gap-4">
-                <Field label="用户名">
-                  <Input required placeholder="用于登录的用户名" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
-                </Field>
-                <Field label="昵称">
-                  <Input required placeholder="例如：小明" value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} />
-                </Field>
-                <Field label="密码">
-                  <div className="relative">
-                    <Input required className="w-full pr-10" minLength={6} placeholder="至少 6 位密码" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-                    <Eye className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-muted" />
-                  </div>
-                </Field>
-                <Field label="默认币种">
-                  <Select value={form.defaultCurrency} onChange={(e) => setForm({ ...form, defaultCurrency: e.target.value })}>
-                    <option value="CNY">CNY - 人民币</option>
-                    <option value="USD">USD - 美元</option>
-                    <option value="EUR">EUR - 欧元</option>
-                    <option value="JPY">JPY - 日元</option>
-                  </Select>
-                </Field>
-                <label className="flex items-start gap-2 text-xs leading-5 text-muted">
-                  <input required className="mt-0.5 h-4 w-4 accent-charcoal" type="checkbox" />
-                  我已阅读并同意用户协议和隐私政策
-                </label>
-                {error ? <p className="text-sm text-red-700">{error}</p> : null}
-                <Button className="h-11 w-full" disabled={submitting} type="submit">
-                  {submitting ? "注册中..." : "注册"}
-                </Button>
-                <div className="relative py-2 text-center text-xs text-muted">
-                  <span className="bg-cream px-3">也可以用其他方式注册</span>
-                  <div className="-mt-2 border-t border-line" />
+        <section className="wm-fade-up flex items-center p-6 sm:p-8 lg:p-12" style={{ animationDelay: "120ms" }}>
+          <div className="w-full">
+            <div className="mb-10 flex items-center justify-between gap-4 text-sm">
+              <span className="text-muted">已有账号？</span>
+              <Link className="font-medium underline" href="/auth/login">
+                去登录
+              </Link>
+            </div>
+            <h2 className="text-3xl font-semibold sm:text-4xl">注册 WhereMoney</h2>
+            <form className="mt-8 grid gap-5" onSubmit={submit}>
+              <Field label="邮箱">
+                <Input required type="email" placeholder="name@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              </Field>
+              <Field label="密码">
+                <div className="relative">
+                  <Input required minLength={6} type="password" placeholder="至少 6 位密码" className="pr-10" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                  <Eye className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-muted" />
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  {["G", "微信"].map((item) => (
-                    <button className="h-11 rounded-md border border-line text-sm" key={item} type="button">
-                      {item}
-                    </button>
-                  ))}
-                  <button className="grid h-11 place-items-center rounded-md border border-line" type="button">
-                    <Apple className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+              </Field>
+              <label className="flex items-start gap-2 text-sm text-muted">
+                <input className="mt-1 h-4 w-4" type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+                <span>我已阅读并同意用户协议和隐私政策</span>
+              </label>
+              {error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+              <Button className="h-12 text-base" disabled={submitting} type="submit">
+                {submitting ? "注册中..." : "注册"}
+              </Button>
             </form>
-          </section>
-        </div>
+            <p className="mt-6 flex items-center gap-2 text-xs text-muted">
+              <Mail className="h-4 w-4" />
+              注册成功后会直接进入系统主页，默认币种为 CNY。
+            </p>
+          </div>
+        </section>
       </div>
     </main>
+  );
+}
+
+function RedirectOverlay() {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-cream/80 backdrop-blur-sm">
+      <div className="rounded-xl border border-line bg-cream p-6 text-center shadow-focus">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-charcoal text-white">
+          <CheckCircle2 className="h-6 w-6" />
+        </div>
+        <p className="mt-4 font-semibold">注册成功</p>
+        <p className="mt-2 text-sm text-muted">正在进入财务工作台...</p>
+        <div className="mt-5 h-1 w-52 overflow-hidden rounded-full bg-line">
+          <div className="h-full w-2/3 animate-pulse rounded-full bg-[#d4a017]" />
+        </div>
+      </div>
+    </div>
   );
 }

@@ -14,9 +14,16 @@ type TransactionInput = {
 };
 
 export const authApi = {
-  login: (body: { username: string; password: string }) =>
+  login: (body: { email: string; password: string }) =>
     apiRequest<AuthResponse>("/api/v1/auth/login", { method: "POST", body: JSON.stringify(body) }),
-  register: (body: { username: string; password: string; nickname: string; defaultCurrency: string }) =>
+  loginWithCode: (body: { email: string; code: string }) =>
+    apiRequest<AuthResponse>("/api/v1/auth/login/code", { method: "POST", body: JSON.stringify(body) }),
+  requestCode: (body: { email: string }) =>
+    apiRequest<{ expiresInSeconds: number; devCode: string }>("/api/v1/auth/verification-codes", {
+      method: "POST",
+      body: JSON.stringify(body)
+    }),
+  register: (body: { email: string; password: string }) =>
     apiRequest<AuthResponse>("/api/v1/auth/register", { method: "POST", body: JSON.stringify(body) })
 };
 
