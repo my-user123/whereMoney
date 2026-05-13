@@ -61,7 +61,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-root}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123456}
-      POSTGRES_DB: ${POSTGRES_DB:-pgvector_db}
+      POSTGRES_DB: ${POSTGRES_DB:-wheremoney}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -69,6 +69,46 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: wheremoney-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-wheremoney}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-root}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-123456}
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:${NGINX_PORT:-80},http://localhost:${FRONTEND_PORT:-3000}
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ""
+    container_name: wheremoney-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: wheremoney-nginx
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
 
 volumes:
   mysql-data:

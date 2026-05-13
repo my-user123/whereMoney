@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wheremoney.modules.transaction.mapper.TransactionMapper">
+  <select id="selectTransactionViewById" resultType="com.wheremoney.modules.transaction.vo.TransactionView">
+    select
+      t.id,
+      t.type,
+      t.amount,
+      t.currency,
+      t.occurred_at as occurredAt,
+      a.id as accountId,
+      a.name as accountName,
+      c.id as categoryId,
+      c.name as categoryName,
+      c.icon as categoryIcon,
+      c.color as categoryColor,
+      t.note,
+      t.source
+    from transactions t
+    join accounts a on a.id = t.account_id
+    join categories c on c.id = t.category_id
+    where t.user_id = #{userId}
+      and t.id = #{id}
+      and t.deleted_at is null
+  </select>
+
+  <select id="selectTransactionViews" resultType="com.wheremoney.modules.transaction.vo.TransactionView">
+    select
+      t.id,
+      t.type,
+      t.amount,
+      t.currency,
+      t.occurred_at as occurredAt,
+      a.id as accountId,
+      a.name as accountName,
+      c.id as categoryId,
+      c.name as categoryName,
+      c.icon as categoryIcon,
+      c.color as categoryColor,
+      t.note,
+      t.source
+    from transactions t
+    join accounts a on a.id = t.account_id
+    join categories c on c.id = t.category_id
+    where t.user_id = #{userId}
+      and t.deleted_at is null
+      <if test="type != null and type != ''">and t.type = #{type}</if>
+      <if test="currency != null and currency != ''">and t.currency = #{currency}</if>
+      <if test="accountId != null">and t.account_id = #{accountId}</if>
+      <if test="categoryId != null">and t.category_id = #{categoryId}</if>
+      <if test="startAt != null">and t.occurred_at &gt;= #{startAt}</if>
+      <if test="endAt != null">and t.occurred_at &lt; #{endAt}</if>
+    order by t.occurred_at desc, t.created_at desc
+    limit #{limit} offset #{offset}
+  </select>
+
+  <select id="countTransactionViews" resultType="long">
+    select count(1)
+    from transactions t
+    where t.user_id = #{userId}
+      and t.deleted_at is null
+      <if test="type != null and type != ''">and t.type = #{type}</if>
+      <if test="currency != null and currency != ''">and t.currency = #{currency}</if>
+      <if test="accountId != null">and t.account_id = #{accountId}</if>
+      <if test="categoryId != null">and t.category_id = #{categoryId}</if>
+      <if test="startAt != null">and t.occurred_at &gt;= #{startAt}</if>
+      <if test="endAt != null">and t.occurred_at &lt; #{endAt}</if>
+  </select>
+</mapper>
