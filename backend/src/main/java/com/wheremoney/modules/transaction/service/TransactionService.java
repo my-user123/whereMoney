@@ -1,6 +1,8 @@
 package com.wheremoney.modules.transaction.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wheremoney.common.enums.TransactionSource;
 import com.wheremoney.common.enums.TransactionType;
 import com.wheremoney.common.exception.BusinessException;
@@ -43,24 +45,10 @@ public class TransactionService {
     LocalDateTime startAt = query.startDate() == null ? null : query.startDate().atStartOfDay();
     LocalDateTime endAt =
         query.endDate() == null ? null : query.endDate().plusDays(1).atStartOfDay();
-    long offset = (query.page() - 1) * query.size();
-    List<TransactionResponse> list =
-        transactionMapper
-            .selectTransactionViews(
-                userId,
-                query.type(),
-                query.currency(),
-                query.accountId(),
-                query.categoryId(),
-                startAt,
-                endAt,
-                query.size(),
-                offset)
-            .stream()
-            .map(this::toResponse)
-            .toList();
-    long total =
-        transactionMapper.countTransactionViews(
+    Page<TransactionView> page = new Page<>(query.page(), query.size());
+    IPage<TransactionView> result =
+        transactionMapper.selectTransactionViews(
+            page,
             userId,
             query.type(),
             query.currency(),
@@ -68,7 +56,8 @@ public class TransactionService {
             query.categoryId(),
             startAt,
             endAt);
-    return new PageResponse<>(total, query.page(), query.size(), list);
+    List<TransactionResponse> list = result.getRecords().stream().map(this::toResponse).toList();
+    return new PageResponse<>(result.getTotal(), query.page(), query.size(), list);
   }
 
   public TransactionResponse detail(Long userId, Long transactionId) {
