@@ -4,7 +4,9 @@ public record UserMeResponse(
     String id,
     String email,
     String username,
+    String nickname,
     String avatarUrl,
     String defaultCurrency,
     String userType,
-    String timezone) {}
+    String timezone,
+    Boolean isNewUserFirstLogin) {}

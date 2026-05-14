@@ -16,11 +16,11 @@ public class CategoryEntity {
   private Long id;
 
   private Long userId;
+  private Long parentId;
   private String name;
   private String type;
   private String icon;
   private String color;
-  private Boolean isSystem;
   private Integer sortOrder;
   private String status;
   private LocalDateTime createdAt;

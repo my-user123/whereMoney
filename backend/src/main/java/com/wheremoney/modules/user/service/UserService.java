@@ -54,9 +54,11 @@ public class UserService {
         String.valueOf(user.getId()),
         user.getEmail(),
         user.getUsername(),
+        profile.getNickname(),
         profile.getAvatarUrl(),
         profile.getDefaultCurrency().code(),
         profile.getUserType(),
-        profile.getTimezone());
+        profile.getTimezone(),
+        user.getIsNewUserFirstLogin());
   }
 }

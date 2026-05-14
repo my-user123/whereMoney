@@ -2,9 +2,13 @@ package com.wheremoney.modules.category.controller;
 
 import com.wheremoney.common.response.ApiResponse;
 import com.wheremoney.common.security.SecurityUtils;
+import com.wheremoney.modules.category.dto.CategoryOnboardingCompleteRequest;
 import com.wheremoney.modules.category.dto.CategoryRequest;
+import com.wheremoney.modules.category.dto.CategoryUpdateRequest;
 import com.wheremoney.modules.category.service.CategoryService;
+import com.wheremoney.modules.category.vo.CategoryOnboardingResponse;
 import com.wheremoney.modules.category.vo.CategoryResponse;
+import com.wheremoney.modules.category.vo.CategoryTemplateResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +37,23 @@ public class CategoryController {
     return ApiResponse.success(categoryService.list(SecurityUtils.currentUserId(), type, status));
   }
 
+  @GetMapping("/onboarding/templates")
+  public ApiResponse<List<CategoryTemplateResponse>> onboardingTemplates() {
+    return ApiResponse.success(categoryService.onboardingTemplates());
+  }
+
+  @PostMapping("/onboarding/complete")
+  public ApiResponse<CategoryOnboardingResponse> completeOnboarding(
+      @Valid @RequestBody CategoryOnboardingCompleteRequest request) {
+    return ApiResponse.success(
+        categoryService.completeOnboarding(SecurityUtils.currentUserId(), request));
+  }
+
+  @PostMapping("/onboarding/skip")
+  public ApiResponse<CategoryOnboardingResponse> skipOnboarding() {
+    return ApiResponse.success(categoryService.skipOnboarding(SecurityUtils.currentUserId()));
+  }
+
   @PostMapping
   public ApiResponse<CategoryResponse> create(@Valid @RequestBody CategoryRequest request) {
     return ApiResponse.success(categoryService.create(SecurityUtils.currentUserId(), request));
@@ -40,7 +61,7 @@ public class CategoryController {
 
   @PutMapping("/{categoryId}")
   public ApiResponse<CategoryResponse> update(
-      @PathVariable Long categoryId, @Valid @RequestBody CategoryRequest request) {
+      @PathVariable Long categoryId, @Valid @RequestBody CategoryUpdateRequest request) {
     return ApiResponse.success(
         categoryService.update(SecurityUtils.currentUserId(), categoryId, request));
   }

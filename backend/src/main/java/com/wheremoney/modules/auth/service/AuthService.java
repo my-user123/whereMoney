@@ -12,7 +12,6 @@ import com.wheremoney.modules.auth.dto.RegisterRequest;
 import com.wheremoney.modules.auth.dto.VerificationCodeRequest;
 import com.wheremoney.modules.auth.vo.AuthResponse;
 import com.wheremoney.modules.auth.vo.VerificationCodeResponse;
-import com.wheremoney.modules.category.service.CategoryService;
 import com.wheremoney.modules.emailcodeverification.service.VerificationEmailService;
 import com.wheremoney.modules.user.entity.UserEntity;
 import com.wheremoney.modules.user.entity.UserProfileEntity;
@@ -38,7 +37,6 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final UserService userService;
-  private final CategoryService categoryService;
   private final SecureRandom secureRandom = new SecureRandom();
   private final StringRedisTemplate stringRedisTemplate;
   private final VerificationEmailService verificationEmailService;
@@ -49,7 +47,6 @@ public class AuthService {
       PasswordEncoder passwordEncoder,
       JwtService jwtService,
       UserService userService,
-      CategoryService categoryService,
       StringRedisTemplate stringRedisTemplate,
       VerificationEmailService verificationEmailService) {
     this.userMapper = userMapper;
@@ -57,7 +54,6 @@ public class AuthService {
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
     this.userService = userService;
-    this.categoryService = categoryService;
     this.stringRedisTemplate = stringRedisTemplate;
     this.verificationEmailService = verificationEmailService;
   }
@@ -77,6 +73,7 @@ public class AuthService {
     user.setUsername(defaultUsername(email));
     user.setPassword(passwordEncoder.encode(request.password()));
     user.setStatus(ResourceStatus.ACTIVE.name());
+    user.setIsNewUserFirstLogin(true);
     user.setCreatedAt(LocalDateTime.now());
     user.setUpdatedAt(user.getCreatedAt());
     userMapper.insert(user);
@@ -89,8 +86,6 @@ public class AuthService {
     profile.setCreatedAt(LocalDateTime.now());
     profile.setUpdatedAt(profile.getCreatedAt());
     profileMapper.insert(profile);
-
-    categoryService.initializeDefaults(user.getId());
 
     String token = jwtService.generateToken(user.getId(), user.getUsername());
     return new AuthResponse(token, userService.toResponse(user, profile));

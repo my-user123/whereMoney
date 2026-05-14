@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -33,10 +34,16 @@ class Phase1FlowTest {
     String otherToken = register("bob");
 
     mockMvc
+        .perform(get("/api/v1/users/me").header("Authorization", bearer(token)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.code").value(200))
+        .andExpect(jsonPath("$.data.isNewUserFirstLogin").value(true));
+
+    mockMvc
         .perform(get("/api/v1/categories").header("Authorization", bearer(token)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.code").value(200))
-        .andExpect(jsonPath("$.data.length()").value(9));
+        .andExpect(jsonPath("$.data.length()").value(0));
 
     String accountId =
         data(mockMvc
@@ -59,15 +66,24 @@ class Phase1FlowTest {
             .get("id")
             .asText();
 
-    JsonNode categories =
-        data(
-            mockMvc
+    String categoryId =
+        data(mockMvc
                 .perform(
-                    get("/api/v1/categories")
-                        .param("type", "EXPENSE")
-                        .header("Authorization", bearer(token)))
-                .andReturn());
-    String categoryId = categories.get(0).get("id").asText();
+                    post("/api/v1/categories")
+                        .header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                            json(
+                                Map.of(
+                                    "name", "餐饮",
+                                    "type", "EXPENSE",
+                                    "icon", "utensils",
+                                    "color", "#F97316"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("餐饮"))
+                .andReturn())
+            .get("id")
+            .asText();
 
     String transactionId =
         data(mockMvc
@@ -120,6 +136,150 @@ class Phase1FlowTest {
         .andExpect(jsonPath("$.data[0].currentBalance").value("100.00"));
   }
 
+  @Test
+  void categoryOnboardingCompleteCreatesSelectedTreeAndMarksUserReady() throws Exception {
+    String token = register("carol");
+
+    mockMvc
+        .perform(
+            get("/api/v1/categories/onboarding/templates").header("Authorization", bearer(token)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.code").value(200))
+        .andExpect(jsonPath("$.data.length()").isNotEmpty());
+
+    mockMvc
+        .perform(
+            post("/api/v1/categories/onboarding/complete")
+                .header("Authorization", bearer(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    json(
+                        Map.of(
+                            "selectedKeys",
+                            java.util.List.of("expense.food.milk-tea.mixue", "income.salary"),
+                            "customCategories",
+                            java.util.List.of(
+                                Map.of(
+                                    "parentKey",
+                                    "expense.food.milk-tea",
+                                    "name",
+                                    "霸王茶姬",
+                                    "type",
+                                    "EXPENSE",
+                                    "icon",
+                                    "cup-soda",
+                                    "color",
+                                    "#F59E0B"))))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.code").value(200))
+        .andExpect(jsonPath("$.data.user.isNewUserFirstLogin").value(false))
+        .andExpect(jsonPath("$.data.categories.length()").value(5));
+
+    mockMvc
+        .perform(get("/api/v1/categories").header("Authorization", bearer(token)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.length()").value(5));
+  }
+
+  @Test
+  void categoryOnboardingSkipMarksUserReadyWithoutCreatingCategories() throws Exception {
+    String token = register("dora");
+
+    mockMvc
+        .perform(post("/api/v1/categories/onboarding/skip").header("Authorization", bearer(token)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.code").value(200))
+        .andExpect(jsonPath("$.data.user.isNewUserFirstLogin").value(false))
+        .andExpect(jsonPath("$.data.categories.length()").value(0));
+  }
+
+  @Test
+  void categoryHierarchyCreateUpdateAndDisableTreeWorks() throws Exception {
+    String token = register("erin");
+
+    String foodId = createCategory(token, null, "餐饮", "EXPENSE");
+    String milkTeaId = createCategory(token, foodId, "奶茶", "EXPENSE");
+    String brandId = createCategory(token, milkTeaId, "霸王茶姬", "EXPENSE");
+
+    mockMvc
+        .perform(
+            post("/api/v1/categories")
+                .header("Authorization", bearer(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    json(
+                        Map.of(
+                            "parentId",
+                            brandId,
+                            "name",
+                            "新品",
+                            "type",
+                            "EXPENSE",
+                            "icon",
+                            "tag",
+                            "color",
+                            "#1c1c1c"))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.code").value(20004));
+
+    mockMvc
+        .perform(
+            post("/api/v1/categories")
+                .header("Authorization", bearer(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    json(
+                        Map.of(
+                            "parentId",
+                            foodId,
+                            "name",
+                            "奖金",
+                            "type",
+                            "INCOME",
+                            "icon",
+                            "gift",
+                            "color",
+                            "#22C55E"))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.code").value(20004));
+
+    mockMvc
+        .perform(
+            put("/api/v1/categories/" + milkTeaId)
+                .header("Authorization", bearer(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json(Map.of("name", "奶茶饮品", "icon", "cup-soda", "color", "#F59E0B"))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.name").value("奶茶饮品"))
+        .andExpect(jsonPath("$.data.type").value("EXPENSE"))
+        .andExpect(jsonPath("$.data.parentId").value(foodId));
+
+    mockMvc
+        .perform(
+            get("/api/v1/categories")
+                .header("Authorization", bearer(token))
+                .param("type", "EXPENSE"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.length()").value(3));
+
+    mockMvc
+        .perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
+                    "/api/v1/categories/" + foodId + "/disable")
+                .header("Authorization", bearer(token)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.code").value(200));
+
+    mockMvc
+        .perform(
+            get("/api/v1/categories")
+                .header("Authorization", bearer(token))
+                .param("type", "EXPENSE")
+                .param("status", "DISABLED"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.length()").value(3));
+  }
+
   private String register(String username) throws Exception {
     String email = username + "@example.com";
     MvcResult result =
@@ -130,8 +290,32 @@ class Phase1FlowTest {
                     .content(json(Map.of("email", email, "password", "secret123"))))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
+            .andExpect(jsonPath("$.data.user.isNewUserFirstLogin").value(true))
             .andReturn();
     return data(result).get("token").asText();
+  }
+
+  private String createCategory(String token, String parentId, String name, String type)
+      throws Exception {
+    java.util.Map<String, Object> body = new java.util.LinkedHashMap<>();
+    if (parentId != null) {
+      body.put("parentId", parentId);
+    }
+    body.put("name", name);
+    body.put("type", type);
+    body.put("icon", "tag");
+    body.put("color", "#1c1c1c");
+    return data(mockMvc
+            .perform(
+                post("/api/v1/categories")
+                    .header("Authorization", bearer(token))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json(body)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.name").value(name))
+            .andReturn())
+        .get("id")
+        .asText();
   }
 
   private String bearer(String token) {

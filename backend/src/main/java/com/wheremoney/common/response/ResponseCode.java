@@ -14,6 +14,8 @@ public enum ResponseCode {
   VERIFICATION_CODE_SEND_FAILED(10003, "verification code email send failed"),
   ACCOUNT_UNAVAILABLE(20001, "account does not exist or is unavailable"),
   CATEGORY_UNAVAILABLE(20002, "category does not exist or is unavailable"),
+  CATEGORY_ONBOARDING_SELECTION_INVALID(20003, "category onboarding selection is invalid"),
+  CATEGORY_HIERARCHY_INVALID(20004, "category hierarchy is invalid"),
   TRANSACTION_NOT_FOUND(30001, "transaction not found"),
   TRANSACTION_CURRENCY_MISMATCH(30002, "transaction currency must match account currency"),
   BUDGET_NOT_FOUND(40001, "budget not found"),

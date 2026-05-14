@@ -19,6 +19,7 @@ public class UserEntity {
   private String username;
   private String password;
   private String status;
+  private Boolean isNewUserFirstLogin;
   private LocalDateTime lastLoginAt;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
